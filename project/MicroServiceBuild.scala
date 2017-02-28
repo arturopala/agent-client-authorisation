@@ -30,6 +30,8 @@ private object AppDependencies {
   private val playHalVersion = "1.1.0"
   private val playHmrcApiVersion = "1.2.0"
   private val playWhitelistVersion = "2.0.0"
+//  private val catsVersion = "0.9.0"
+  private val catsVersion = "0.7.2"
 
   val compile = Seq(
     "uk.gov.hmrc" %% "play-reactivemongo" % playReactivemongoVersion,
@@ -44,7 +46,10 @@ private object AppDependencies {
     "uk.gov.hmrc" %% "play-hal" % playHalVersion,
     "uk.gov.hmrc" %% "play-hmrc-api" % playHmrcApiVersion,
     "uk.gov.hmrc" %% "play-whitelist-filter" % playWhitelistVersion,
-    "uk.gov.hmrc" %% "domain" % domainVersion
+    "uk.gov.hmrc" %% "domain" % domainVersion,
+    "org.typelevel" %% "cats" % catsVersion,
+    "io.kanaka" %% "play-monadic-actions" % "2.0.0",
+    "io.kanaka" %% "play-monadic-actions-cats" % "2.0.0"
   )
 
   trait TestDependencies {

@@ -45,43 +45,50 @@ class AgentInvitationValidationSpec extends UnitSpec with AgentInvitationValidat
   private def responseFor(invite: AgentInvitation): Result = {
     await(checkForErrors(invite)).head
   }
-  private def postcodeCheck(postcode: String = "AN11PA") = when(desConnector.getBusinessDetails(any[Nino])(any[HeaderCarrier], any[ExecutionContext])).thenReturn(Future successful Some(BusinessDetails(AddressDetails("GB", Some(postcode)))))
+  private def businessHasPostcode(postcode: String = "AN11PA") = when(desConnector.getBusinessDetails(any[Nino])(any[HeaderCarrier], any[ExecutionContext])).thenReturn(Future successful Some(BusinessDetails(AddressDetails("GB", Some(postcode)))))
 
   "checkForErrors" should {
 
     "fail with Forbidden if the postcode doesn't match" in {
-      postcodeCheck()
+      businessHasPostcode()
       responseFor(validInvite.copy(postcode = "BN29AB")) is Forbidden
     }
 
     "fail with BadRequest if the postcode is not valid" in {
-      postcodeCheck()
+      businessHasPostcode()
       responseFor(validInvite.copy(postcode = "AAAAAA")) is BadRequest
     }
 
     "fail with NotImplemented if the regime is not mtd-sa" in {
-      postcodeCheck()
+      businessHasPostcode()
       responseFor(validInvite.copy(regime = "mtd-vat")) is NotImplemented
     }
 
+    "report multiple failures" in {
+      businessHasPostcode()
+      val errors: Seq[Result] = await(checkForErrors(validInvite.copy(postcode = "BN29AB", regime = "mtd-vat")))
+      status(errors.head) shouldBe status(Forbidden)
+      status(errors(1)) shouldBe status(NotImplemented)
+    }
+
     "pass when the postcode is valid, matches and has mtd-sa as the regime" in {
-      postcodeCheck()
+      businessHasPostcode()
       await(checkForErrors(validInvite)) shouldBe Nil
     }
 
     "pass when the postcodes differ by case" in {
-      postcodeCheck("an11pa")
+      businessHasPostcode("an11pa")
       await(checkForErrors(validInvite)) shouldBe Nil
 
-      postcodeCheck()
+      businessHasPostcode()
       await(checkForErrors(validInvite.copy(postcode = "an11pa"))) shouldBe Nil
     }
 
     "pass when the postcodes differ by spacing" in {
-      postcodeCheck("AN1 1PA")
+      businessHasPostcode("AN1 1PA")
       await(checkForErrors(validInvite)) shouldBe Nil
 
-      postcodeCheck()
+      businessHasPostcode()
       await(checkForErrors(validInvite.copy(postcode = "AN1 1PA"))) shouldBe Nil
     }
   }
